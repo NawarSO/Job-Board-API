@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// After the database connection
+
+
+model User {
+  // id_user pk for user
+  user_id Int @id @default(autoincrement())
+
+  // email string (unique)
+  email String @unique
+
+  // username string 
+  username String?
+
+// hashed password
+hashed_password String
+
+// country
+  country String?
+
+// state 
+  state String?
+
+  job_seeker Job_seeker? // relations 1*1
+  emp Employer?          // relation 1*1
+
+}
+///////////////////////
+model Job_seeker{
+jobseeker_id Int @id @default(autoincrement())
+university String?
+resume String?
+user User @relation(fields: [userId], references: [user_id])
+userId Int @unique
+skills Skill[] // m*n to Skill
+app Application[] // 1*m Application
+}
+
+
+//////////////////////
+
+model Employer{
+  employer_id Int @id @default(autoincrement())
+  user User @relation(fields: [userId], references: [user_id])
+  userId Int @unique // the relation field
+  comp Company @relation(fields:[companyID], references:[company_id])     // 1*1 relation
+  companyID Int @unique // the relation field 
+  job Jobs[] //1*m to jobs
+}
+
+////////////////////////
+
+model Company{
+  company_id Int @id @default(autoincrement()) // pk
+  name String
+  location String
+  industry String
+  employer Employer?  // 1*1 relation
+}
+
+////////////////////////
+model Jobs {
+  jobs_id Int @id @default(autoincrement()) // pk
+  job_title String
+  description String
+  location String
+  salary_range String?
+  deadline DateTime?
+  createdAt DateTime @default(now())
+
+  emp Employer @relation(fields: [emp_id], references: [employer_id]) // m*1 to Employer
+  emp_id Int
+  requirements Skill[]   // m*m relation
+  app Application[]     // 1 *m relation
+}
+/////////////////////
+model Skill{
+  skill_id Int @id @default(autoincrement()) // pk
+  skill_name String
+  requirements Jobs[] // n*m to jobs
+  job_seeker_skills Job_seeker[] // n*m to job_seeker
+
+}
+/////////////////////
+model Admin{
+  admin_id Int @id @default(autoincrement())
+  name String
+  email String
+  hashed_password String
+}
+/////////////////////
+model Application {
+
+  app_id Int @id @default(autoincrement())
+  resume String?
+  status String  @default("Pending")
+  additional_details String?
+
+  // we set `job_id` variable
+  // with INT type
+  // linker to Job model
+
+  // m*1 relation
+  jobs Jobs @relation(fields: [job_id], references: [jobs_id])
+  job_id Int
+
+
+ // m*1 relation
+  job_seeker Job_seeker @relation(fields: [job_seeker_id], references:[jobseeker_id])
+  job_seeker_id Int
+
+}
